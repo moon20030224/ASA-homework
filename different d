@@ -1,0 +1,30 @@
+
+def plot_samples_for_d(ds, n_samples, s):
+    fig, axs = plt.subplots(1, len(ds), figsize=(5 * len(ds), 4))
+    
+    for i, d in enumerate(ds):
+        samples = metropolis_hastings(d, n_samples, s, perturb_one_dim=False)
+        
+
+        if d == 1:
+            axs[i].hist(samples[:, 0], bins=30, density=True, alpha=0.6)
+            axs[i].set_title(f'Dimension: {d}')
+        else:
+            axs[i].scatter(samples[:, 0], samples[:, 1], alpha=0.2, s=10)
+            axs[i].set_title(f'Dimension: {d}')
+            axs[i].set_xlim(-3, 3)
+            axs[i].set_ylim(-3, 3)
+        
+        axs[i].set_xlabel('Dimension 1')
+        if d > 1:
+            axs[i].set_ylabel('Dimension 2')
+    
+    plt.tight_layout()
+    plt.show()
+
+
+ds = [1, 2, 5, 10]  # Different dimensions to experiment with
+n_samples = 5000
+s = 1  # Standard deviation of the proposal distribution
+
+plot_samples_for_d(ds, n_samples, s)
