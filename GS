@@ -1,0 +1,57 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+
+# Function to perform Metropolis-Hastings algorithm
+def metropolis_hastings(d, n_samples, s, perturb_one_dim=False):
+    # Target distribution: standard Gaussian in d dimensions
+    target_pdf = lambda x: np.exp(-0.5 * np.sum(x**2))
+    
+    # Proposal distribution: Gaussian centered at current state
+    propose = lambda x: x + np.random.normal(0, s, size=d)
+
+    samples = np.zeros((n_samples, d))
+    x_current = np.random.normal(0, 1, size=d)  # Initial state
+    for i in range(n_samples):
+        x_proposal = propose(x_current) if not perturb_one_dim else np.copy(x_current)
+        if perturb_one_dim:
+            # Perturb one dimension at a time
+            dim_to_perturb = np.random.randint(0, d)
+            x_proposal[dim_to_perturb] += np.random.normal(0, s)
+
+        # Calculate acceptance probability
+        accept_prob = min(1, target_pdf(x_proposal) / target_pdf(x_current))
+        
+        # Accept/reject step
+        if np.random.rand() < accept_prob:
+            x_current = x_proposal
+        
+        samples[i] = x_current
+    
+    return samples
+
+# Parameters
+d = 2  # Dimension
+n_samples = 10000
+s_values = [0.1, 1, 5]  # Different values of s to experiment with
+
+# Plotting
+fig, axs = plt.subplots(len(s_values), 2, figsize=(12, 4 * len(s_values)))
+x = np.linspace(-3, 3, 100)
+y = np.linspace(-3, 3, 100)
+X, Y = np.meshgrid(x, y)
+Z = stats.norm.pdf(X) * stats.norm.pdf(Y)
+
+for i, s in enumerate(s_values):
+    samples = metropolis_hastings(d, n_samples, s)
+    axs[i, 0].contour(X, Y, Z, levels=20)
+    axs[i, 0].scatter(samples[:, 0], samples[:, 1], alpha=0.2, s=10)
+    axs[i, 0].set_title(f's = {s}, All Dimensions')
+
+    samples_one_dim = metropolis_hastings(d, n_samples, s, perturb_one_dim=True)
+    axs[i, 1].contour(X, Y, Z, levels=20)
+    axs[i, 1].scatter(samples_one_dim[:, 0], samples_one_dim[:, 1], alpha=0.2, s=10)
+    axs[i, 1].set_title(f's = {s}, One Dimension at a Time')
+
+plt.tight_layout()
+plt.show()
